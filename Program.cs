@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Threading;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace ytdlpWrapper
 {
@@ -64,16 +63,19 @@ namespace ytdlpWrapper
             string ytDlpCommand = $"-o \"H:\\Video\\youtube.com\\%(title)s.%(ext)s\" -f \"bestvideo[height<=4000][ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best\" \"{url}\"";
             Console.WriteLine("yt-dlp.exe " + ytDlpCommand);
             Console.WriteLine("Press any key to continue...");
-            Console.ReadLine();
+            Console.ReadKey(intercept: true);
+            Console.WriteLine();
 
             // Spuštění Windows Terminalu a předání příkazu pro yt-dlp.exe
+            // Shell příkaz je potřeba zabalit do cmd /k, aby jej Windows Terminal správně převzal.
+            string escapedYtDlpCommand = ytDlpCommand.Replace("\"", "\\\"");
             ProcessStartInfo psi = new ProcessStartInfo
             {
                 FileName = "wt.exe",
                 WorkingDirectory = "H:\\Video\\youtube.com",
-                Arguments = $"H:\\Video\\youtube.com\\yt-dlp.exe {ytDlpCommand}",
-                UseShellExecute = true,  // Nutné pro zvýšení oprávnění
-                Verb = "runas"           // Toto zajistí spuštění jako administrátor
+                Arguments = $"new-tab cmd /k \"H:\\Video\\youtube.com\\yt-dlp.exe {escapedYtDlpCommand}\"",
+                UseShellExecute = true,
+                Verb = "runas"
             };
 
             try
@@ -153,7 +155,7 @@ namespace ytdlpWrapper
             // Pokud najdeme procesy, vrátíme ID prvního
             var ytdlpProc = processes.FirstOrDefault<Process>(p => p.ProcessName.ToLowerInvariant().Contains(processName.ToLowerInvariant()));
             
-            if (!ytdlpProc.Equals(null)) return ytdlpProc.Id;
+            if (ytdlpProc != null) return ytdlpProc.Id;
             return null; // Žádný proces nenalezen
         }
         static bool IsProcessRunning(int processId)
