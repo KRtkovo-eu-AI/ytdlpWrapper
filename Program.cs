@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.ComponentModel;
 using System.Threading;
 
 namespace ytdlpWrapper
@@ -69,12 +70,13 @@ namespace ytdlpWrapper
             // Spuštění nové instance Windows Terminalu a předání příkazu pro yt-dlp.exe.
             // Přepínač "-w new" vynutí novou instanci okna i pokud už WT běží.
             // Shell příkaz je potřeba zabalit do cmd /k, aby jej Windows Terminal správně převzal.
-            string escapedYtDlpCommand = ytDlpCommand.Replace("\"", "\\\"");
+            string fullYtDlpInvocation = $"H:\\Video\\youtube.com\\yt-dlp.exe {ytDlpCommand}";
+            string escapedForCmd = fullYtDlpInvocation.Replace("\"", "\"\"");
             ProcessStartInfo psi = new ProcessStartInfo
             {
                 FileName = "wt.exe",
                 WorkingDirectory = "H:\\Video\\youtube.com",
-                Arguments = $"-w new new-tab --startingDirectory \"H:\\Video\\youtube.com\" cmd /k \"H:\\Video\\youtube.com\\yt-dlp.exe {escapedYtDlpCommand}\"",
+                Arguments = $"-w new new-tab --startingDirectory \"H:\\Video\\youtube.com\" cmd /k \"{escapedForCmd}\"",
                 UseShellExecute = true,
                 Verb = "runas"
             };
@@ -92,6 +94,29 @@ namespace ytdlpWrapper
                     // Čekání na dokončení procesu
                     Console.WriteLine("yt-dlp started successfully as Admin.");
                     process.WaitForExit();
+                }
+            }
+            catch (Win32Exception ex) when (ex.NativeErrorCode == 5)
+            {
+                Console.WriteLine("Admin launch was denied. Retrying without elevation...");
+                psi.Verb = string.Empty;
+
+                try
+                {
+                    using (Process fallbackProcess = new Process())
+                    {
+                        fallbackProcess.StartInfo = psi;
+                        fallbackProcess.EnableRaisingEvents = true;
+                        fallbackProcess.Exited += new EventHandler(myProcess_Exited);
+                        fallbackProcess.Start();
+
+                        Console.WriteLine("yt-dlp started successfully.");
+                        fallbackProcess.WaitForExit();
+                    }
+                }
+                catch (Exception retryEx)
+                {
+                    Console.WriteLine($"Error: {retryEx.Message}");
                 }
             }
             catch (Exception ex)
@@ -141,6 +166,29 @@ namespace ytdlpWrapper
                 else
                 {
                     Console.WriteLine("No video files found.");
+                }
+            }
+            catch (Win32Exception ex) when (ex.NativeErrorCode == 5)
+            {
+                Console.WriteLine("Admin launch was denied. Retrying without elevation...");
+                psi.Verb = string.Empty;
+
+                try
+                {
+                    using (Process fallbackProcess = new Process())
+                    {
+                        fallbackProcess.StartInfo = psi;
+                        fallbackProcess.EnableRaisingEvents = true;
+                        fallbackProcess.Exited += new EventHandler(myProcess_Exited);
+                        fallbackProcess.Start();
+
+                        Console.WriteLine("yt-dlp started successfully.");
+                        fallbackProcess.WaitForExit();
+                    }
+                }
+                catch (Exception retryEx)
+                {
+                    Console.WriteLine($"Error: {retryEx.Message}");
                 }
             }
             catch (Exception ex)
