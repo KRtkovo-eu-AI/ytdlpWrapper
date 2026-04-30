@@ -96,29 +96,6 @@ namespace ytdlpWrapper
                     process.WaitForExit();
                 }
             }
-            catch (Win32Exception ex) when (ex.NativeErrorCode == 5)
-            {
-                Console.WriteLine("Admin launch was denied. Retrying without elevation...");
-                psi.Verb = string.Empty;
-
-                try
-                {
-                    using (Process fallbackProcess = new Process())
-                    {
-                        fallbackProcess.StartInfo = psi;
-                        fallbackProcess.EnableRaisingEvents = true;
-                        fallbackProcess.Exited += new EventHandler(myProcess_Exited);
-                        fallbackProcess.Start();
-
-                        Console.WriteLine("yt-dlp started successfully.");
-                        fallbackProcess.WaitForExit();
-                    }
-                }
-                catch (Exception retryEx)
-                {
-                    Console.WriteLine($"Error: {retryEx.Message}");
-                }
-            }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error: {ex.Message}");
