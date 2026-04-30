@@ -66,14 +66,15 @@ namespace ytdlpWrapper
             Console.ReadKey(intercept: true);
             Console.WriteLine();
 
-            // Spuštění Windows Terminalu a předání příkazu pro yt-dlp.exe
+            // Spuštění nové instance Windows Terminalu a předání příkazu pro yt-dlp.exe.
+            // Přepínač "-w new" vynutí novou instanci okna i pokud už WT běží.
             // Shell příkaz je potřeba zabalit do cmd /k, aby jej Windows Terminal správně převzal.
             string escapedYtDlpCommand = ytDlpCommand.Replace("\"", "\\\"");
             ProcessStartInfo psi = new ProcessStartInfo
             {
                 FileName = "wt.exe",
                 WorkingDirectory = "H:\\Video\\youtube.com",
-                Arguments = $"new-tab cmd /k \"H:\\Video\\youtube.com\\yt-dlp.exe {escapedYtDlpCommand}\"",
+                Arguments = $"-w new new-tab --startingDirectory \"H:\\Video\\youtube.com\" cmd /k \"H:\\Video\\youtube.com\\yt-dlp.exe {escapedYtDlpCommand}\"",
                 UseShellExecute = true,
                 Verb = "runas"
             };
