@@ -66,12 +66,12 @@ namespace ytdlpWrapper
             Console.WriteLine("Press any key to continue...");
             Console.ReadLine();
 
-            // Spuštění Windows Terminalu a předání příkazu pro yt-dlp.exe
+            // Spuštění klasického command line a předání příkazu pro yt-dlp.exe
             ProcessStartInfo psi = new ProcessStartInfo
             {
-                FileName = "wt.exe",
+                FileName = "cmd.exe",
                 WorkingDirectory = "H:\\Video\\youtube.com",
-                Arguments = $"H:\\Video\\youtube.com\\yt-dlp.exe {ytDlpCommand}",
+                Arguments = $"/c \"H:\\Video\\youtube.com\\yt-dlp.exe {ytDlpCommand}\"",
                 UseShellExecute = true,  // Nutné pro zvýšení oprávnění
                 Verb = "runas"           // Toto zajistí spuštění jako administrátor
             };
