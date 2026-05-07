@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using static System.Net.Mime.MediaTypeNames;
 
 namespace ytdlpWrapper
@@ -66,12 +65,12 @@ namespace ytdlpWrapper
             Console.WriteLine("Press any key to continue...");
             Console.ReadLine();
 
-            // Spuštění Windows Terminalu a předání příkazu pro yt-dlp.exe
+            // Spuštění klasického command line a předání příkazu pro yt-dlp.exe
             ProcessStartInfo psi = new ProcessStartInfo
             {
-                FileName = "wt.exe",
+                FileName = "cmd.exe",
                 WorkingDirectory = "H:\\Video\\youtube.com",
-                Arguments = $"H:\\Video\\youtube.com\\yt-dlp.exe {ytDlpCommand}",
+                Arguments = $"/c \"H:\\Video\\youtube.com\\yt-dlp.exe {ytDlpCommand}\"",
                 UseShellExecute = true,  // Nutné pro zvýšení oprávnění
                 Verb = "runas"           // Toto zajistí spuštění jako administrátor
             };
@@ -82,37 +81,19 @@ namespace ytdlpWrapper
                 using (Process process = new Process())
                 {
                     process.StartInfo = psi;
-                    process.EnableRaisingEvents = true;
-                    process.Exited += new EventHandler(myProcess_Exited);
                     process.Start();
 
                     // Čekání na dokončení procesu
                     Console.WriteLine("yt-dlp started successfully as Admin.");
                     process.WaitForExit();
+
+                    // Po dokončení stahování otevřeme složku a označíme stažený soubor
+                    OpenDownloadedVideoInWindowsExplorer();
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error: {ex.Message}");
-            }
-        }
-
-        private static void myProcess_Exited(object sender, EventArgs e)
-        {
-            Thread.Sleep(1500);
-
-            string processName = "yt-dlp"; // Název procesu bez přípony
-            int? processId = GetProcessIdByName(processName);
-
-            if (processId.HasValue)
-            {
-                while (IsProcessRunning(processId.Value))
-                {
-                    Thread.Sleep(100);
-                }
-
-                // Zavolání funkce pro otevření složky
-                OpenDownloadedVideoInWindowsExplorer();
             }
         }
 
@@ -143,34 +124,6 @@ namespace ytdlpWrapper
             catch (Exception ex)
             {
                 Console.WriteLine($"Error: {ex.Message}");
-            }
-        }
-        static int? GetProcessIdByName(string processName)
-        {
-            // Načtení všech procesů
-            Process[] processes = Process.GetProcesses();
-
-            // Pokud najdeme procesy, vrátíme ID prvního
-            var ytdlpProc = processes.FirstOrDefault<Process>(p => p.ProcessName.ToLowerInvariant().Contains(processName.ToLowerInvariant()));
-            
-            if (!ytdlpProc.Equals(null)) return ytdlpProc.Id;
-            return null; // Žádný proces nenalezen
-        }
-        static bool IsProcessRunning(int processId)
-        {
-            try
-            {
-                // Získání procesu podle ID
-                using (Process process = Process.GetProcessById(processId))
-                {
-                    // Pokud je proces nalezen a jeho MainWindowHandle je nulový, proces je stále spuštěn
-                    return !process.HasExited;
-                }
-            }
-            catch (ArgumentException)
-            {
-                // ArgumentException se vyvolá, pokud proces s tímto ID neexistuje
-                return false;
             }
         }
     }
